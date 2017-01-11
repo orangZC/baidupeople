@@ -10,3 +10,4 @@ import scrapy
 class BaiduItem(scrapy.Item):
     name = scrapy.Field()
     description = scrapy.Field()
+    url = scrapy.Field()

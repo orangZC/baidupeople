@@ -3,38 +3,38 @@
 # Please refer to the documentation for information on how to create and manage
 # your spiders.
 # coding:utf-8
-from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors import LinkExtractor
+import scrapy
 from baidu.items import BaiduItem
 
-class Baiduspider(CrawlSpider):
+class Baiduspider(scrapy.Spider):
 
     #爬虫baidu
     name = 'baidu'
 
     #允许爬取的页面
-    allowed_domains = ['baike.baidu.com', 'http://baike.baidu.com']
+    allowed_domains = 'baike.baidu.com'
 
     #爬虫起始页面.
     start_urls = [
-        'http://baike.baidu.com/item/%E5%88%98%E5%BE%B7%E5%8D%8E/114923',
+        'https://baike.baidu.com/fenlei/%E8%AF%9D%E9%A2%98%E4%BA%BA%E7%89%A9',
     ]
 
-    #爬取规则
-    rules = [
-        Rule(LinkExtractor(allow=(r'http://baike.baidu.com/view',),
-                           restrict_xpaths=('//div[@class="main-content"]',)), callback='parse_baike', follow=True),
-        Rule(LinkExtractor(allow=(r'http://baike.baidu.com/subview',),
-                           restrict_xpaths=('//div[@class="main-content"]',)), callback='parse_baike', follow=True),
-    ]
-
-    def parse_baike(self, response):
+    def parse(self, response):
+        sites = response.xpath('//div[@class="list"]')
+        for site in sites:
             item = BaiduItem()
-            name = response.xpath('//dd[@class="lemmaWgt-lemmaTitle-title"]/h1/text()').extract()
-            description = response.xpath('//div[@class="lemma-summary"]')
-            des = description[0].xpath('string(.)').extract()[0]
+            base_url = site.xpath('a/@href').extract()
+            name = site.xpath('a/text()').extract()
+            description = site.xpath('p/text()').extract()
+            for urls in base_url:
+                url = 'https://baike.baidu.com'+urls
+            item['url'] = url
             item['name'] = name
-            item['description'] = des
+            item['description'] = description
             yield item
 
+        next_page = response.xpath('//a[@id="next"]/@href')
+        if next_page:
+            url = response.urljoin(next_page[0].extract())
+            yield scrapy.Request(url, self.parse, dont_filter=True)
 
