@@ -10,7 +10,7 @@ import codecs
 
 class BaiduPipeline(object):
     def __init__(self):
-        self.file = codecs.open('话题人物.json', 'w', encoding='utf-8')
+        self.file = codecs.open('item.json', 'w', encoding='utf-8')
     def process_item(self, item, spider):
         line = json.dumps(dict(item), ensure_ascii=False) + "\n"
         self.file.write(line)
